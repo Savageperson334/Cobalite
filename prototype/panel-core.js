@@ -28,11 +28,11 @@ class Panel08 {
  turn(id,delta){if(!Number.isFinite(delta)||delta===0)return;for(const h of this.held)this.used.add(h);
  if(id==="volume"){this.volume=clamp(this.volume+delta);this.emit({type:"volume",value:this.volume});return;}
  if(id==="page"){this.page=this.cycle(screens,this.page,delta);this.param=0;this.msg=labels[this.page];return;}
- if(id==="algorithm"){const k=this.osc?"engineB":"engineA";this.patch[k]=this.cycle(I.engines,this.patch[k],delta);this.changed();return;}
+ if(id==="algorithm"){this.returnTerrain(true);const k=this.osc?"engineB":"engineA";this.patch[k]=this.cycle(I.engines,this.patch[k],delta);this.changed();return;}
  if(id==="tempo"){this.patch.bpm=clamp(this.patch.bpm+Math.round(delta*100),35,240);this.changed();return;}
  if(id==="arp"){this.patch.arpOrder=this.cycle(["up","down","pendulum","outside"],this.patch.arpOrder,delta);this.changed();return;}
  if(id==="edit"&&actionFields[this.page]&&!this.roamCapture&&!this.source&&this.editLocal(delta))return;
- if(id==="edit"&&this.page==="fx"&&!this.held.has("shift")&&!this.source&&this.param===0){this.patch.fxTypes[this.fx]=this.cycle(I.effects,this.patch.fxTypes[this.fx],delta);const d=root.CobaliteFX.types[this.patch.fxTypes[this.fx]].defaults;for(let j=0;j<3;j++)this.patch["fx"+this.fx+"ABC"[j]]=d[j];this.changed();return;}
+ if(id==="edit"&&this.page==="fx"&&!this.held.has("shift")&&!this.source&&this.param===0){this.returnTerrain(true);this.patch.fxTypes[this.fx]=this.cycle(I.effects,this.patch.fxTypes[this.fx],delta);const d=root.CobaliteFX.types[this.patch.fxTypes[this.fx]].defaults;for(let j=0;j<3;j++)this.patch["fx"+this.fx+"ABC"[j]]=d[j];this.changed();return;}
  let dest=id==="edit"?(extras[this.page][this.param]||this.focus):this.resolve(id);if(!dest||!I.registry[dest])return;this.focus=dest;
  if(this.roamCapture){if(I.registry[dest].roam&&this.path.at(-1)?.id!==dest&&this.path.length<24)this.path.push({id:dest,sign:Math.sign(delta)});this.msg="Roam "+this.path.length;return;}
  if(this.source){this.route(this.source,dest,delta);return;}
@@ -48,7 +48,7 @@ class Panel08 {
  else if(id==="attack"||id==="decay"){this.env=id==="attack"?"filter":"amp";}
  else if(id==="fxA"||id==="fxB"||id==="fxC"){this.fx="ABC".indexOf(id.at(-1));this.page="fx";}
  else if(id==="page"){this.param=(this.param+1)%Math.max(1,this.fields().length);this.msg=String(this.current());}
- else if(id==="mode"){this.patch.mode=this.cycle(I.modes,this.patch.mode,1);this.changed();}
+ else if(id==="mode"){this.returnTerrain(true);this.patch.mode=this.cycle(I.modes,this.patch.mode,1);this.changed();}
  else if(id==="patch"){this.page=this.page==="phrase"?"sound":"phrase";}
  else if(id==="arp"){this.patch.chordMode=this.cycle(["off","chord","arp"],this.patch.chordMode,1);this.changed();}
  else if(id==="tempo")this.emit({type:"capture"});
@@ -59,9 +59,9 @@ class Panel08 {
  else if(id==="edit")this.activateLocal();
  }
  captureCorner(i){if(this.terrainBase)throw Error("Return or keep before capturing");if(this.corners.some(c=>c&&!compatible(c,this.patch)))throw Error("Use matching engines and FX");this.corners[i]=snapshot(this.patch);this.msg="Captured corner "+(i+1);}
- enterTerrain(){if(!this.corners.some(Boolean))return false;this.terrainBase=copy(this.patch);this.move(...this.xy);return true;}
- move(x,y){this.xy=[clamp(x),clamp(y)];if(this.terrainBase){this.patch=blend(this.terrainBase,this.corners,...this.xy);this.changed();}}
- returnTerrain(keep=false){if(!this.terrainBase)return;if(!keep){this.patch=this.terrainBase;this.changed();}this.terrainBase=null;}
+ enterTerrain(){if(!this.corners.some(Boolean))return false;const next=blend(this.patch,this.corners,...this.xy);if(!this.terrainBase)this.terrainBase=snapshot(this.patch);this.patch=next;this.changed();return true;}
+ move(x,y){this.xy=[clamp(x),clamp(y)];if(this.terrainBase){if(!compatible(this.patch,this.terrainBase)){this.terrainBase=null;this.msg="Terrain exited: sound structure changed";return;}this.patch=blend(this.patch,this.corners,...this.xy);this.changed();}}
+ returnTerrain(keep=false){if(!this.terrainBase)return;if(!keep){this.patch={...this.patch,...copy(this.terrainBase)};this.changed();}this.terrainBase=null;}
  reset(){this.remember();this.patch=I.init();this.corners=[null,null,null,null];this.terrainBase=null;this.roamRunning=false;this.emit({type:"panic"});this.emit({type:"journey",slot:0,running:false});this.emit({type:"journey",slot:1,running:false});this.journeys[0].path=[];this.journeys[1].path=[];this.changed();}
 }
 root.CobalitePanel08={Panel08,layout,labels,extras,compatible,snapshot,blend};
