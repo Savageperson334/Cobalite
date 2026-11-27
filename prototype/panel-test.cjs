@@ -1,0 +1,23 @@
+const fs=require("node:fs"),path=require("node:path"),assert=require("node:assert/strict");
+const read=n=>fs.readFileSync(path.join(__dirname,n),"utf8"),root={};
+for(const f of ["phrase-core.js","society-core.js","fx-core.js","instrument-core.js","panel-core.js","roam-08.js"])new Function("globalThis",read(f))(root);
+const I=root.CobaliteInstrument,C=root.CobalitePanel08,R=root.CobaliteRoam08;
+new Function(read("panel.html").match(/<script>([\s\S]*)<\/script>/)[1]);
+const controls=C.layout.flat(),knobs=controls.filter(c=>!c.button&&!c.xy&&!c.display);
+assert.equal(knobs.length,26);assert.equal(knobs.filter(c=>c.push).length,13);assert.equal(controls.filter(c=>c.button).length,9);
+const messages=[],p=new C.Panel08(d=>messages.push(d));const base=p.patch.cutoff;
+p.down("rate");p.turn("cutoff",.2);p.up("rate");assert.equal(p.patch.cutoff,base);assert.equal(p.patch.routes[0].src,"lfo");assert.equal(p.patch.routes[0].depth,.2);assert.equal(p.source,null);assert.equal(p.lfo,0);
+p.down("rate");p.up("rate");assert.equal(p.lfo,1);
+p.down("shift");p.turn("cutoff",.1);p.turn("balance",-.1);p.turn("cutoff",.1);p.up("shift");assert.equal(p.patch.cutoff,base);assert.deepEqual(p.journeys[0].path,[{id:"cutoff",sign:1},{id:"balance",sign:-1},{id:"cutoff",sign:1}]);assert.equal(messages.at(-1).type,"journey");assert.equal(p.held.size,0);
+p.down("shift");p.turn("cutoff",.1);p.up("shift",true);assert.equal(p.journeys[0].path.length,3);
+p.patch.cutoff=.2;p.captureCorner(0);p.patch.cutoff=.8;p.captureCorner(1);p.enterTerrain();p.move(.5,0);assert(Math.abs(p.patch.cutoff-.5)<1e-9);p.returnTerrain();assert.equal(p.patch.cutoff,.8);
+p.page="terrain";p.param=2;p.down("edit");p.up("edit");assert(p.corners[2]);
+p.page="utility";p.param=1;p.inspectSource="tail";p.focus="cutoff";p.turn("edit",.1);assert(p.patch.routes.some(r=>r.src==="tail"&&r.dest==="cutoff"));
+const duo=new R.Duo();
+duo.message({slot:0,config:{path:[{id:"cutoff",sign:1},{id:"balance",sign:-1}],duration:10,depth:1,trail:1,once:false},running:true,restart:true});
+duo.message({slot:1,config:{path:[{id:"cutoff",sign:1}],duration:15,depth:1,once:true},running:true,restart:true});
+for(let i=0;i<50;i++)duo.step(.1);assert(duo.paths[0].offsets.cutoff>0);assert(duo.paths[0].offsets.balance<0);assert(Math.abs(duo.offsets.cutoff)<=.65);
+duo.message({slot:0,frozen:true});const phase=duo.paths[0].phase;duo.step(.1);assert.equal(duo.paths[0].phase,phase);
+for(let i=0;i<160;i++)duo.step(.1);assert(!duo.paths[1].running);duo.message({slot:0,running:false});for(let i=0;i<100;i++)duo.step(.1);assert(Object.values(duo.offsets).every(v=>Math.abs(v)<.0001));
+for(const sr of [44100,48000]){let Synth;new Function("globalThis","AudioWorkletProcessor","registerProcessor","sampleRate",read("panel-worklet.js"))(root,class{constructor(){this.port={postMessage(){}};}},(_,c)=>Synth=c,sr);const x=new Synth(),msg=d=>x.port.onmessage({data:d}),patch=I.init();Object.assign(patch,{engineA:"ensemble",engineB:"field",shapeA:.65,charA:.45,balance:.35,fxTypes:["decay","bypass","bypass"]});I.setRoute(patch,"tail","rate2",-.6);msg({type:"patch",patch});for(let i=0;i<2;i++)msg({type:"journey",slot:i,config:{path:[{id:i?"balance":"cutoff",sign:1},{id:"fx0C",sign:-1}],duration:10+i*5,depth:.5,trail:.4},running:true,restart:true});for(let i=0;i<8;i++)msg({type:"on",id:i,note:48+i*3,vel:.8});let peak=0;for(let i=0;i<180;i++){const o=[new Float32Array(128),new Float32Array(128)];x.process([], [o]);for(const c of o)for(const v of c){assert(Number.isFinite(v));peak=Math.max(peak,Math.abs(v));}}assert(peak>0);assert(x.pool.slots.every(s=>s.state==="active"));assert(x.duo.paths.every(p=>p.phase>0));msg({type:"panic"});assert(x.pool.slots.every(s=>s.state==="free"));assert(x.duo.paths.every(p=>!p.running));console.log(sr+" Hz: eight voices, dual Roam, FX and panic passed; output peak "+peak.toFixed(3));}
+console.log("Panel budget, source hold, signed ordered capture, cancel, Terrain, encoder navigation, trail/freeze/one-shot and return passed.");
