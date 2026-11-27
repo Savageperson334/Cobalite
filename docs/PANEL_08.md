@@ -1,0 +1,27 @@
+# Cobalite 0.8 — panel and motion study
+
+0.7 remains unchanged as a reference. 0.8 runs the same unified architecture with a candidate relative-encoder front panel, two Roam journeys, joystick Terrain and an initial 12-sound bank. No hardware code, device firmware or claims of real-time embedded feasibility.
+
+## Physical constraints
+The [Cobalt8M manual](https://cmi.com.au/Files/Files/Docs/MODAL/cobalt8M_MANUAL_v2.pdf) specifies 13 switched encoders, 13 ordinary encoders and nine buttons, plus joystick and OLED. The [quick-start diagram](https://cmi.com.au/Files/Files/Docs/MODAL/cobalt8M-QUICKSTART.pdf) informs the three-row layout. The simulator matches the aggregate control budget and approximate control groups; individual switch identities, exact geometry, detents, event IDs, LED placement and OLED pixel dimensions still need verification on the physical unit. Do not call it an exact emulator. Its PUSH buttons represent encoder switches, not additional physical buttons. The browser keyboard, context tabs, preset dropdown and extra sliders are convenience controls, not extra hardware.
+
+### Candidate grammar
+- Drag or wheel an encoder (relative delta); turn a primary knob without changing other control groups. Keyboard arrow keys work on focused knobs.
+- Push Rate to cycle LFO focus. Hold Rate switch and turn a destination to route selected LFO; the base value remains unchanged. Hold Velo/AftT for those sources. Browser shortcuts 1/2/3 select held LFO source. Utility context lets Page/Param and Edit inspect other sources, including listening circuits.
+- Shift is momentary Roam capture. Hold Shift (or R on keyboard), turn destinations in order and direction, release to launch. A tap with no destinations stops the selected journey. Cancelled holds do not commit.
+- Hold Patch while turning A1/A2 for Character B1/B2. There is no persistent global shifted state. Algorithm switch selects source, turn selects engine.
+- Press Attack/Decay switches for filter/amp envelope focus. FX A/B/C switches select slots; A/B/C turns edit the selected slot; Edit in FX context selects effect type or local mix. These are proposed mappings and may change after hardware inspection.
+- Page turn moves among local contexts, Page push advances the local field, Edit turn edits and Edit push triggers the focused action. Terrain capture/enter/return/keep, Roam transport, phrase controls and utility source/route editing use this same grammar.
+- Tempo switch captures a phrase, Note captures a chord; transport buttons in browser provide direct access. Save stores locally; Init requires confirmation.
+
+## Terrain
+Four compatible snapshots of continuous sound controls and signed routes; engines, voice mode and FX types must match. Bilinear weighting; missing corners borrow the first captured state. Missing routes are zero. Route count remains capped at 64, with strongest weighted routes retained if the union is larger. Enter snapshots the sound; joystick or browser X/Y controls change the interpolation; Return restores sound without overwriting newly recorded phrase/chord state; Keep retains the interpolated sound. Discrete structure changes leave Terrain. Manual edits are allowed but next joystick move reconstructs interpolated continuous values. Anchors and journeys are included in browser-local storage; active transports are not. No automated joystick path yet.
+
+## Roam 2
+Two independent sample-clocked paths, 10–600 seconds, signed per-visit direction, maximum 24 visits each. Raised-cosine overlap, optional fading trail up to roughly a minute depending on visit spacing, independent depth, freeze/resume, loop or one-shot with fade to base. Combined offset budget ±0.65 before common parameter headroom shaping. Freeze holds phase while offsets settle. Stop returns with ~450 ms time constant. Single destination uses a slow raised-cosine curve. Both paths can address FX/LFO properties through the shared registry. Variable visit dwell and modulation of journey speed remain future work. One-shot still crossfades toward the first destination near the end while fading down.
+
+## Sound refinement
+The ensemble partner now follows the selected waveform instead of always being a sine. Sample reduction explicitly bypasses at the low threshold. Twelve hand-authored audition candidates span keys, bass, leads, pads, textures and feedback-modulated sounds; short headless renders passed. No loudness normalization, listening certification or aliasing measurement. The bank is a starting point toward the planned 30 auditioned patches, not a final commercial bank.
+
+## Testing and next gate
+node prototype/panel-test.cjs exercises panel budget, held-source assignment, non-destructive signed capture, cancel, joystick interpolation and return, phrase/chord preservation, encoder navigation, dual Roam overlap, trails, freeze, one-shot return, eight voices and FX at 44.1/48 kHz, and all 12 patches at 48 kHz. Test audio peak is not proof of overload safety under every condition. Browser input, actual real-time audio, physical event map and sound remain untested. FX allocation remains too large for direct embedded port; no external clock, polyphonic LFOs, independent mod envelope, gesture recording or true hardware adapter yet. Next verify the actual switch map and hardware firmware dispatch, audition and revise this panel, implement shared clock/gesture lanes, optimize DSP and measure target memory before any flashable build. PR #1 remains untouched.
