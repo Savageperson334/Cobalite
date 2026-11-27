@@ -1,0 +1,32 @@
+/* Unified instrument contract. Stable parameter IDs; all continuous values normalized. */
+(function(root){"use strict";
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const registry={};
+function group(page,defs){for(const [id,label,value,scope="voice",roam=true] of defs)registry[id]={id,label,value,page,scope,roam};}
+group("sound",[["shapeA","A Shape",.18],["charA","A Character",.12],["shapeB","B Shape",.3],["charB","B Character",.12],["balance","Balance",.25],["relation","Relationship",0],["interaction","Interaction",0],["tuneA","A Pitch",.5,"voice",false],["tuneB","B Pitch",.5,"voice",false]]);
+group("tone",[["cutoff","Cutoff",.72],["resonance","Resonance",.12],["filterMode","Filter colour",0],["filterEnv","Filter envelope",.15],["attack","Attack",.06],["decay","Decay",.25],["sustain","Sustain",.82],["release","Release",.24],["fattack","Filter attack",.05],["fdecay","Filter decay",.3],["fsustain","Filter sustain",.2],["frelease","Filter release",.3],["crush","Bit reduction",0],["hold","Sample reduction",0],["drive","Drive",0]]);
+group("motion",[["rate","LFO 1 Rate",.3,"global"],["lshape1","LFO 1 Shape",0,"global"],["ldepth1","LFO 1 Depth",1,"global"],["rate2","LFO 2 Rate",.18,"global"],["lshape2","LFO 2 Shape",.34,"global"],["ldepth2","LFO 2 Depth",1,"global"],["rate3","LFO 3 Rate",.12,"global"],["lshape3","LFO 3 Shape",.82,"global"],["ldepth3","LFO 3 Depth",1,"global"],["motion","Motion",1,"none",false]]);
+group("play",[["drift","Individuality",.15],["cohesion","Cohesion",.6],["history","History",.15],["spread","Stereo width",.25],["energy","Bloom macro",0],["detune","Unison spread",.25],["glide","Mono glide",0]]);
+group("fx",[["fxWet","FX Level",.65,"global"],...Array.from({length:3},(_,i)=>["A","B","C","Mix"].map((s,j)=>["fx"+i+s,"FX "+(i+1)+" "+s,j===3?.35:.4,"global"])).flat()]);
+const sources={lfo:"LFO 1",lfo2:"LFO 2",lfo3:"LFO 3",env:"Amp envelope",fenv:"Filter envelope",velocity:"Velocity",wheel:"Wheel",pressure:"Pressure",energyIn:"Input energy",brightness:"Brightness",transient:"Transient",width:"Stereo difference",tail:"FX tail",activity:"Notes held",phase:"Phrase position",memory:"Voice history"};
+const polySources=new Set(["env","fenv","velocity","memory"]),engines=["classic","ensemble","phase","field","fold"],effects=["bypass","decay","refraction","patina","parallax","bloom"],modes=["poly","mono","unison2","unison4","unison8","stack2","stack4","complement"];
+const ids=Object.keys(registry);
+function init(){const p={version:1,engineA:"classic",engineB:"ensemble",mode:"poly",fxTypes:["bypass","bypass","bypass"],routes:[],chord:[0,4,7],chordMode:"off",inversion:0,voicing:0,arpOrder:"up",bpm:110,phrase:null,transforms:{},roam:{path:[],duration:180,depth:.5}};for(const id of ids)p[id]=registry[id].value;return p;}
+function routeAllowed(src,dest){return Object.hasOwn(sources,src)&&Object.hasOwn(registry,dest)&&registry[dest].scope!=="none"&&!(registry[dest].scope==="global"&&polySources.has(src));}
+function setRoute(p,src,dest,depth){if(!routeAllowed(src,dest)||!Number.isFinite(depth))return false;depth=clamp(depth,-1,1);p.routes=p.routes.filter(r=>r.src!==src||r.dest!==dest);if(depth!==0){if(p.routes.length>=64)return false;p.routes.push({src,dest,depth});}return true;}
+function validate(raw){if(!raw||raw.version!==1)throw Error("unsupported patch version");const p=init();for(const id of ids)if(Number.isFinite(raw[id]))p[id]=clamp(raw[id]);for(const k of ["engineA","engineB"])if(engines.includes(raw[k]))p[k]=raw[k];if(modes.includes(raw.mode))p.mode=raw.mode;if(Array.isArray(raw.fxTypes))for(let i=0;i<3;i++)if(effects.includes(raw.fxTypes[i]))p.fxTypes[i]=raw.fxTypes[i];if(Array.isArray(raw.routes))for(const r of raw.routes.slice(0,64))if(r)setRoute(p,r.src,r.dest,r.depth);if(Array.isArray(raw.chord)&&raw.chord.length&&raw.chord.every(n=>Number.isInteger(n)&&n>=0&&n<=127))p.chord=[...new Set(raw.chord)].sort((a,b)=>a-b).slice(0,8);if(["off","chord","arp"].includes(raw.chordMode))p.chordMode=raw.chordMode;if(Number.isFinite(raw.inversion))p.inversion=clamp(Math.round(raw.inversion),-3,3);if(Number.isFinite(raw.voicing))p.voicing=clamp(Math.round(raw.voicing),0,2);if(["up","down","pendulum","outside"].includes(raw.arpOrder))p.arpOrder=raw.arpOrder;if(Number.isFinite(raw.bpm))p.bpm=clamp(raw.bpm,35,240);if(raw.phrase&&root.CobalitePhrase)try{p.phrase=root.CobalitePhrase.validate(raw.phrase);}catch{}if(raw.transforms)for(const [k,range] of Object.entries({density:[-1,1],rotate:[-.5,.5],quantize:[0,1],swing:[-.45,.45],variation:[0,1],harmony:[0,1],gate:[.1,2]}))if(Number.isFinite(raw.transforms[k]))p.transforms[k]=clamp(raw.transforms[k],...range);if(raw.roam){p.roam.path=Array.isArray(raw.roam.path)?raw.roam.path.filter(x=>x&&registry[x.id]?.roam&&(x.sign===1||x.sign===-1)).slice(0,24).map(x=>({id:x.id,sign:x.sign})):[];if(Number.isFinite(raw.roam.duration))p.roam.duration=clamp(raw.roam.duration,10,600);if(Number.isFinite(raw.roam.depth))p.roam.depth=clamp(raw.roam.depth);}return p;}
+/* Headroom-shaped additive modulation: linear near zero, smoothly compresses at boundaries. */
+function headroom(base,offset){base=clamp(base);const room=offset>=0?1-base:base;if(room<=0)return base;return base+Math.sign(offset)*room*Math.tanh(Math.abs(offset)/room);}
+class Panel{
+ constructor(p=init()){this.patch=p;this.page="sound";this.focus="balance";this.source="lfo";this.roaming=false;this.path=[];this.undo=[];}
+ checkpoint(){this.undo.push(JSON.parse(JSON.stringify(this.patch)));if(this.undo.length>32)this.undo.shift();}
+ select(id){if(!registry[id])return false;this.focus=id;if(this.roaming&&registry[id].roam&&this.path.at(-1)?.id!==id&&this.path.length<24)this.path.push({id,sign:this.patch[id]>.65?-1:1});return true;}
+ turn(id,value){if(!this.select(id)||!Number.isFinite(value))return false;if(!this.roaming)this.patch[id]=clamp(value);return true;}
+ delta(id,amount){return this.turn(id,this.patch[id]+amount);}
+ assign(src,depth){return setRoute(this.patch,src,this.focus,depth);}
+ startRoam(){this.roaming=true;this.path=[];}
+ endRoam(){this.roaming=false;if(!this.path.length)return false;this.patch.roam.path=this.path.slice();return true;}
+ revert(){if(!this.undo.length)return false;this.patch=this.undo.pop();return true;}
+}
+const api={registry,ids,sources,engines,effects,modes,init,validate,setRoute,routeAllowed,headroom,Panel,clamp};if(typeof module==="object"&&module.exports)module.exports=api;else root.CobaliteInstrument=api;
+})(globalThis);
