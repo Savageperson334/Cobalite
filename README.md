@@ -52,3 +52,7 @@ Design and engineering decisions remain provisional until validated by listening
 ## Current experiment: Living Circuits 0.4
 
 [Design and quality gates](docs/LIVING_CIRCUITS.md) · [Audition instructions](prototype/README.md) · [Browser prototype](prototype/living.html). Three interconnected LFOs, travelling modulation, four-corner sound terrain and a continuous oscillator relationship field. Prior labs remain in the repo for comparison. No flashable firmware is available.
+
+## Afterimage: effects research
+
+[FX design](docs/AFTERIMAGE_FX.md) · [Stock capability audit](docs/COBALT_CAPABILITY_AUDIT.md) · [Audition lab](prototype/fx.html). Serve `prototype/` locally as before and open `/fx.html`. Five original experimental effects, three fixed serial slots and audio-derived modulation. Run `node prototype/fx-test.cjs` for headless DSP checks. Independent from Living Circuits while PR #1 is in progress; no flashable firmware or browser audition yet.
