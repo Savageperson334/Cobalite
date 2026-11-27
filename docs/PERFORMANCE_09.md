@@ -1,0 +1,22 @@
+# Cobalite 0.9 — performance and motion
+
+## Audition
+Serve prototype/ locally (`python -m http.server 8000 --directory prototype`) and open http://localhost:8000/performance-09.html. Enable audio at low volume. 0.7 and 0.8 remain intact; PR #1 is not modified.
+
+## Phrase Ecology
+Capture begins on the first note. Smart closes at the preceding bar if the finish gesture is up to 0.3 beats late and every recorded gate ends before that boundary; otherwise round upward. Bar always rounds upward. Free uses actual elapsed duration. Maximum 128 beats and 512 notes. Overdub works on an already playing phrase, measures note times relative to its loop origin, and adds raw live notes (not generated arpeggios/chords). Finish adds a layer without restarting the transport; changes are scheduled at the next cycle. Undo layer restores the previous phrase; up to 16 session-only undo entries. Stop cancels an unfinished overdub. Saved patch stores the flattened phrase, not its undo history. Existing transformations apply to the combined phrase. No metronome or count-in added.
+
+## Motion lanes
+Capture motion arms immediately, length equal to current phrase length or four beats if none. Turn actual virtual encoders to add relative offsets on up to four continuous, Roam-eligible destinations; UI sliders outside the panel remain base edits. Finish manually or after one full capture interval. At most 256 points/lane; linear interpolation, 35 ms offset smoothing and a return to zero at the loop end. Preview offsets do not alter patch bases. Motion starts from its own finish point, and can be restarted on the phrase origin using Play Motion. It uses the common beat clock, not audio sample recording. Offsets sum with Roam and routed modulation before headroom shaping. Eight session-only motion undo entries. Saved motion data is inactive on recall. Existing motion is replaced by a successful new capture, not overdubbed. No automated joystick capture yet.
+
+## Modulation
+Independent third ADSR (mod envelope) per note. Push Sustain for envelope focus, hold Sustain and turn a destination to assign it. Two additional note-retriggered voice LFO sources (Voice LFO 1/2) use the effective rate/shape/depth of global LFO 1/2 with independent note-on phase. Their Wander region is a smooth periodic composite, not a separate random process. The existing global LFOs keep their original free-running seeded wandering. Per-voice sources are rejected for global destinations. Clock-relative LFO divisions span 1/4–32 beats/cycle, capped at 16 Hz; rate modulation bends the nominal rate, so these are tempo-relative oscillators, not hard phase-lock. Journey Speed 1/2 are routable global parameters, with 0.5 neutral and a 0.25–4x rate multiplier. Route evaluation now uses destination buckets instead of scanning every route for every destination; audio DSP remains expensive and not allocation-free.
+
+## Rhythm and clock
+Euclidean arp: 1–16 steps, 0–steps pulses, rotation, beat division and gate. Pitch order advances with grid steps even during rests, keeping rhythmic and melodic cycles independent. A single shared sample-clock beat accumulator serves the phrase, arp and motion lanes. Optional Web MIDI tempo follower estimates BPM from 24 pulses/quarter note, using timestamp smoothing; follows the first clock input and returns to internal tempo after a 750 ms dropout. This is tempo following, not external phase lock, MIDI start/continue/stop or analog sync. Browser timing still untested.
+
+## Physical controls
+Same 26 encoders, 13 candidate encoder switches and nine buttons as 0.8. Page/Param and Edit expose capture, overdub, undo, motion controls, close mode, arp rhythm, envelope parameters and tempo division. Source hold and relative gestures retain the 0.8 grammar. The browser has direct transport shortcuts and an original-note/motion lane display; no new physical switches are assumed. Physical events, exact switch IDs and OLED dimensions remain unverified.
+
+## Validation
+`node prototype/performance-test-09.cjs` checks smart and free capture length, Euclidean pulse counts, timestamp tempo estimator, source scope, held-source and gesture panel events, integrated overdub/undo, motion playback without base edits, tempo-relative LFOs, finite audio and panic at 44.1 and 48 kHz. Checks run headlessly against the source, not real-time browser audio or MIDI hardware. No listening test, target CPU budget measurement or flashable image.
