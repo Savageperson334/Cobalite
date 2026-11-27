@@ -1,0 +1,10 @@
+# Never commit vendor firmware, update files or extracted images (see docs/HARDWARE_H0.md).
+*.syx
+*.bin
+*.hex
+*.elf
+firmware/
+stock/
+# Local tooling
+node_modules/
+.DS_Store

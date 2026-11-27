@@ -1,0 +1,13 @@
+{
+  "name": "cobalite",
+  "private": true,
+  "description": "Alternate-firmware research and browser prototypes for the Modal Cobalt8M",
+  "scripts": {
+    "test": "node tools/run-tests.cjs",
+    "serve": "python3 -m http.server 8000 --directory prototype",
+    "audit": "node tools/firmware-audit.cjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

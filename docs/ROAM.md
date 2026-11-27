@@ -1,6 +1,6 @@
 # ROAM — travelling modulation
 
-Status: implemented as an independent browser experiment in prototype/roam.html; no hardware integration. This is a deliberately different kind of modulation source: the destination travels, not just the source value.
+Status: implemented as an independent browser experiment in prototype/archive/roam.html (archived; Roam continues in the 0.8 and 0.9 builds); no hardware integration. This is a deliberately different kind of modulation source: the destination travels, not just the source value.
 
 ## Gesture
 

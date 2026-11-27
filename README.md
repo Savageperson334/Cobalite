@@ -6,6 +6,13 @@ An independent alternate-firmware project for the Modal Cobalt8M.
 
 **Status: pre-alpha research and desktop prototyping. No flashable firmware or hardware compatibility is established. Do not flash experimental images.**
 
+## Try it
+
+    npm run serve    # or: python3 -m http.server 8000 --directory prototype
+    npm test         # every headless test suite (Node 18+)
+
+Open http://localhost:8000, turn the volume down and pick a build. The current one is **[Performance & Motion 0.9](prototype/performance-09.html)** ([notes](docs/PERFORMANCE_09.md)). Everything runs in the browser. MIDI keyboards and clock can play it, but nothing here sends data or firmware to a Cobalt.
+
 ## Design principles
 
 - Play first. The panel should remain useful while notes are held or a sequence is running.
@@ -49,30 +56,10 @@ Cobalite is unofficial and not affiliated with Modal or Korg. Do not commit vend
 
 Design and engineering decisions remain provisional until validated by listening, panel interaction tests and hardware evidence.
 
-## Earlier experiment: Living Circuits 0.4
+## Project map
 
-[Design and quality gates](docs/LIVING_CIRCUITS.md) · [Audition instructions](prototype/README.md) · [Browser prototype](prototype/living.html). Three interconnected LFOs, travelling modulation, four-corner sound terrain and a continuous oscillator relationship field. Prior labs remain in the repo for comparison. No flashable firmware is available.
+- **[prototype/](prototype/README.md)**: the browser builds. 0.9 is current; 0.8 and 0.7 are earlier builds; Afterimage FX, Phrase Ecology and Voice Society are component labs; 0.1–0.4 are in [prototype/archive/](prototype/archive/README.md).
+- **[docs/](docs/README.md)**: design notes, per-build notes and hardware research, with an index.
+- **[tools/](tools/)**: `firmware-audit.cjs`, a read-only checker for your own stock Cobalt update files (`npm run audit -- panel.syx master.syx slave.syx`). It never sends MIDI or writes firmware. See [Hardware milestone H0](docs/HARDWARE_H0.md). `run-tests.cjs` runs every test suite.
 
-## Afterimage: effects research
-
-[FX design](docs/AFTERIMAGE_FX.md) · [Stock capability audit](docs/COBALT_CAPABILITY_AUDIT.md) · [Audition lab](prototype/fx.html). Serve `prototype/` locally as before and open `/fx.html`. Five original experimental effects, three fixed serial slots and audio-derived modulation. Run `node prototype/fx-test.cjs` for headless DSP checks. Independent from Living Circuits while PR #1 is in progress; no flashable firmware or browser audition yet.
-
-## Phrase Ecology: capture-first sequencing
-
-[Phrase design](docs/PHRASE_ECOLOGY.md) · [Audition lab](prototype/phrase.html). Serve `prototype/` locally and open `/phrase.html`. Capture a performance, finish to loop, transform it without changing the original. MIDI keyboard input and a simple audition synth with optional Afterimage echo. Run `node prototype/phrase-test.cjs`. Separate from Living Circuits and device firmware.
-
-## Voice Society / Chord Memory
-
-[Design and allocator contract](docs/VOICE_SOCIETY.md) · [Audition lab](prototype/society.html). Serve `prototype/` locally and open `/society.html`. Eight persistent voice identities, mono/unison/stack/complement modes, captured chord voicings, inversion and arpeggiation. Run `node prototype/society-test.cjs`. Independent audition renderer; not integrated firmware.
-
-## Earlier instrument: 0.7 unified build
-
-[Audition the unified instrument](prototype/instrument.html) · [Consolidation review](docs/INSTRUMENT_07.md). Serve `prototype/` as before and open `/instrument.html`. One voice pool, patch, modulation registry, synthesis engine, phrase/chord transport and Afterimage rack. Try Living sound for a cross-modulating and audio-responsive starting patch. Run `node prototype/instrument-test.cjs`. Prior labs are retained for comparison. Headless checks passed at 44.1 and 48 kHz; browser audition, physical panel and firmware remain unverified.
-
-## Earlier instrument study: 0.8 panel
-
-[Panel audition](prototype/panel.html) · [Design and limitations](docs/PANEL_08.md). Serve `prototype/` locally and open `/panel.html`. Relative controls, two Roam journeys, Terrain joystick and twelve audition patches. `node prototype/panel-test.cjs` for regression checks. Hardware-shaped candidate, not an exact emulator or flashable firmware. 0.7 remains available.
-
-## Current instrument study: 0.9 Performance & Motion
-
-[Audition](prototype/performance-09.html) · [Performance design](docs/PERFORMANCE_09.md) · [Hardware milestone H0](docs/HARDWARE_H0.md). Serve `prototype/` locally, open `/performance-09.html`. Overdub/undo, smart/free loop capture, four motion lanes, Euclidean arp, third envelope, two additional voice-local LFO sources, tempo-relative modulation and routable journey speeds. Run `node prototype/performance-test-09.cjs`. Headless integration checks passed; actual browser audio, hardware and firmware remain unverified. Read-only stock SysEx inventory tool: `tools/firmware-audit.cjs`.
+All tests are headless checks of DSP and event logic. Browser audio, listening quality, the physical panel and the hardware remain unverified.
