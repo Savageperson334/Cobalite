@@ -6,6 +6,7 @@ new Function(script);
 const worklet=script.match(/const processorCode=`([\s\S]*?)`;/)[1];
 const initial=new Function("return "+script.match(/const initial=(\{[^\n]+\});/)[1])();
 const presets=new Function("return "+script.match(/const presets=(\{[\s\S]*?\n\});/)[1])();
+const INIT_PRE_LIMIT_MAX=1,PRESET_PRE_LIMIT_MAX=1; // measured <=0.35 over 48 blocks at 0.4
 for(const sr of [44100,48000]){
  let Synth;
  new Function("AudioWorkletProcessor","registerProcessor","sampleRate",worklet)(class{constructor(){this.port={postMessage(){}};}},(_,c)=>Synth=c,sr);
@@ -17,8 +18,14 @@ for(const sr of [44100,48000]){
   for(let j=0;j<blocks;j++){const out=[new Float32Array(128),new Float32Array(128)];assert.equal(p.process([], [out]),true);for(let i=0;i<128;i++){const a=out[0][i],b=out[1][i];assert(Number.isFinite(a)&&Number.isFinite(b));assert(Math.max(Math.abs(a),Math.abs(b))<=1);peak=Math.max(peak,Math.abs(a),Math.abs(b));energy+=a*a+b*b;difference+=Math.abs(a-b);buf.push(a,b);}}
   assert.equal(p.voices.length,8);assert(energy>0);return {peak,energy,difference,buf,p};
  }
- for(const [name,v] of Object.entries(presets)){const q=render({...initial,...v});console.log(sr+" "+name+" peak "+q.peak.toFixed(3));}
+ // Output passes through tanh, so |out|<=1 always holds; measure the level before the limiter instead.
+ for(const [name,v] of Object.entries(presets)){const q=render({...initial,...v});console.log(sr+" "+name+" peak "+q.peak.toFixed(3)+" pre-limit "+q.p.preLimitPeak.toFixed(3));assert(Number.isFinite(q.p.preLimitPeak)&&q.p.preLimitPeak<PRESET_PRE_LIMIT_MAX,name+" drives the output limiter too hard");}
+ assert(render(initial).p.preLimitPeak<INIT_PRE_LIMIT_MAX,"Init chord should not reach the output limiter");
  for(const balance of [0,1]){const a=render({...initial,balance,interaction:0,relation:0}),b=render({...initial,balance,interaction:1,relation:1});assert(a.buf.every((x,i)=>x===b.buf[i]));}
+ // Sample reduction: a near-zero setting is the clean signal, and a small setting stays close to it (no jump to half rate).
+ {const clean=render(initial),tiny=render({...initial,hold:.001}),small=render({...initial,hold:.02});assert(tiny.buf.every((x,i)=>x===clean.buf[i]));let held=0;for(let i=2;i<small.buf.length;i+=2)if(small.buf[i]===small.buf[i-2])held++;assert(held/(small.buf.length/2)<.1,"hold .02 repeats "+held+" samples");}
+ // Retrigger: re-striking a note keeps the old voice releasing instead of cutting it.
+ {const p=new Synth();msg(p,{type:"patch",patch:initial});msg(p,{type:"on",id:5,note:60,vel:.8});for(let j=0;j<20;j++)p.process([],[[new Float32Array(128),new Float32Array(128)]]);msg(p,{type:"off",id:5});msg(p,{type:"on",id:5,note:60,vel:.8});assert.equal(p.voices.length,2);assert(p.voices[0].off&&p.voices[0].id===null&&!p.voices[1].off);msg(p,{type:"off",id:5});assert(p.voices.every(v=>v.off));}
  const p=new Synth(),links=[];
  for(let from=0;from<3;from++)for(let to=0;to<3;to++)if(from!==to)links.push({from,to,kind:["rate","shape","depth"][to],amount:from%2?-1:1});
  const patch={...initial,rate:.7,rate2:.9,rate3:.5,lshape3:1,links};
