@@ -65,6 +65,10 @@ Design and engineering decisions remain provisional until validated by listening
 
 [Design and allocator contract](docs/VOICE_SOCIETY.md) · [Audition lab](prototype/society.html). Serve `prototype/` locally and open `/society.html`. Eight persistent voice identities, mono/unison/stack/complement modes, captured chord voicings, inversion and arpeggiation. Run `node prototype/society-test.cjs`. Independent audition renderer; not integrated firmware.
 
-## Current instrument: 0.7 unified build
+## Earlier instrument: 0.7 unified build
 
 [Audition the unified instrument](prototype/instrument.html) · [Consolidation review](docs/INSTRUMENT_07.md). Serve `prototype/` as before and open `/instrument.html`. One voice pool, patch, modulation registry, synthesis engine, phrase/chord transport and Afterimage rack. Try Living sound for a cross-modulating and audio-responsive starting patch. Run `node prototype/instrument-test.cjs`. Prior labs are retained for comparison. Headless checks passed at 44.1 and 48 kHz; browser audition, physical panel and firmware remain unverified.
+
+## Current instrument study: 0.8 panel
+
+[Panel audition](prototype/panel.html) · [Design and limitations](docs/PANEL_08.md). Serve `prototype/` locally and open `/panel.html`. Relative controls, two Roam journeys, Terrain joystick and twelve audition patches. `node prototype/panel-test.cjs` for regression checks. Hardware-shaped candidate, not an exact emulator or flashable firmware. 0.7 remains available.
