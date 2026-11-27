@@ -60,3 +60,7 @@ Design and engineering decisions remain provisional until validated by listening
 ## Phrase Ecology: capture-first sequencing
 
 [Phrase design](docs/PHRASE_ECOLOGY.md) · [Audition lab](prototype/phrase.html). Serve `prototype/` locally and open `/phrase.html`. Capture a performance, finish to loop, transform it without changing the original. MIDI keyboard input and a simple audition synth with optional Afterimage echo. Run `node prototype/phrase-test.cjs`. Separate from Living Circuits and device firmware.
+
+## Voice Society / Chord Memory
+
+[Design and allocator contract](docs/VOICE_SOCIETY.md) · [Audition lab](prototype/society.html). Serve `prototype/` locally and open `/society.html`. Eight persistent voice identities, mono/unison/stack/complement modes, captured chord voicings, inversion and arpeggiation. Run `node prototype/society-test.cjs`. Independent audition renderer; not integrated firmware.
