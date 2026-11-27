@@ -41,6 +41,6 @@ Five engines: classic, ensemble, phase/FM, harmonic field (two spectral concentr
 - Build the firmware backend separately using pinned input hashes and verified recovery procedures. This prototype does not create any device image. Upstream proprietary files remain outside Git.
 
 ## Audition
-Serve prototype/ locally and open living.html. Enable audio at low volume, try Tidal field, connect MIDI if available, explore balance at high interaction, then vary LFO link types and amounts. Capture NW and other Terrain corners after modifying the same patch. Run a Roam example while exploring the network. Return restores the pre-Terrain patch, and Roam Stop independently clears the journey. Try quieter settings and extreme settings, then compare to the old lab.
+Serve prototype/ locally and open archive/living.html (now archived; see [../prototype/archive/README.md](../prototype/archive/README.md)). Enable audio at low volume, try Tidal field, connect MIDI if available, explore balance at high interaction, then vary LFO link types and amounts. Capture NW and other Terrain corners after modifying the same patch. Run a Roam example while exploring the network. Return restores the pre-Terrain patch, and Roam Stop independently clears the journey. Try quieter settings and extreme settings, then compare to the old lab.
 
-Run node prototype/living-test.cjs from the repository root. Browser interaction is still untested. No production-ready or flashable firmware is claimed.
+Run node prototype/archive/living-test.cjs from the repository root. Browser interaction is still untested. No production-ready or flashable firmware is claimed.

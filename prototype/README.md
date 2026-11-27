@@ -1,51 +1,41 @@
-# Instrument lab 0.1
+# Cobalite prototypes
 
-A standalone browser sketch, not an emulator or a hardware firmware image.
+Browser sketches for comparing sound and interaction ideas. They are not emulators and not firmware. Do not flash anything from this directory.
 
-## Run locally
+## Run
 
-Clone the repository and serve the prototype from localhost, using Python 3:
+From the repository root (Python 3):
 
-    cd Cobalite
-    python -m http.server 8000 --directory prototype
+    npm run serve        # same as: python3 -m http.server 8000 --directory prototype
 
-Open http://localhost:8000 in a recent desktop browser, turn speaker volume down, then click Enable audio. AudioWorklet requires a secure context (localhost or HTTPS). No external libraries or network services are needed. Use the on-screen keys or A W S E D F T G Y H U J K; click outside focused inputs/buttons before playing with the computer keyboard.
+Open http://localhost:8000 for the list of builds. AudioWorklet needs localhost or HTTPS. Turn the volume down, then click Enable audio. No external libraries or network services are used.
 
-## Try
+Run every headless test with `npm test` (Node 18 or later). These check the DSP and event logic only; they don't replace listening, browser testing or hardware validation.
 
-1. Init and hold a few notes. Explore Source A Shape, then Character.
-2. Blend Source B, try Ensemble, then Phase / FM.
-3. Increase Phase interaction gradually.
-4. Explore Bit reduction and Sample reduction separately; return both to zero.
-5. Click the Cutoff label, select LFO, set a signed depth and apply. Adjust cutoff normally while modulation remains active.
-6. Click the same destination again to inspect or remove the route. Use Motion amount to reduce its influence without deleting the connection.
-7. Use Undo after changing a control, or Init for the starting sound. All notes off silences the prototype.
+## What's here
 
-## Current scope and limitations
+| Page | Status | Notes | Test |
+|---|---|---|---|
+| [performance-09.html](performance-09.html) | **Current build** | [PERFORMANCE_09](../docs/PERFORMANCE_09.md) | `performance-test-09.cjs` |
+| [panel.html](panel.html) | Earlier build 0.8 | [PANEL_08](../docs/PANEL_08.md) | `panel-test.cjs` |
+| [instrument.html](instrument.html) | Earlier build 0.7 | [INSTRUMENT_07](../docs/INSTRUMENT_07.md) | `instrument-test.cjs` |
+| [fx.html](fx.html) | Component lab | [AFTERIMAGE_FX](../docs/AFTERIMAGE_FX.md) | `fx-test.cjs` |
+| [phrase.html](phrase.html) | Component lab | [PHRASE_ECOLOGY](../docs/PHRASE_ECOLOGY.md) | `phrase-test.cjs` |
+| [society.html](society.html) | Component lab | [VOICE_SOCIETY](../docs/VOICE_SOCIETY.md) | `society-test.cjs` |
+| [archive/](archive/README.md) | Early labs 0.1–0.4 | [archive/README](archive/README.md) | `archive/*-test.cjs` |
 
-- Up to eight independently allocated voices, a basic attack/release envelope, a simple low-pass filter and two sources with three experimental oscillator families.
-- Phase interaction, two forms of digital degradation, LFO and velocity modulation, route inspector and patch undo.
-- Mono signal duplicated into both output channels; no real stereo engine yet.
-- Simple native-rate waveforms and nonlinear processing can alias; parameter changes and voice stealing can click. This is not production DSP.
-- CPU efficiency, browser compatibility, MIDI input, smooth parameter interpolation, real ADSR, presets, and accurate hardware-panel simulation are not yet implemented or validated. No hardware timing or memory conclusions can be inferred.
-- The prototype has been committed but has not been auditioned or browser-tested during creation. If an AudioWorklet error appears, report browser/version and console error.
+## Shared modules
 
-The goal is to compare interaction and sound directions before choosing hardware control mappings or porting DSP. Do not flash anything from this directory.
+The builds and component labs share these files, so they stay together in this folder:
 
-## Performance lab 0.2
+- `fx-core.js`: Afterimage effects.
+- `phrase-core.js`: phrase capture and transformation.
+- `society-core.js`: voice allocator and chord memory.
+- `instrument-core.js`: stable parameter IDs and the shared parameter registry.
+- `panel-core.js`, `panel-bank.js`: virtual panel events and the audition bank.
+- `roam-08.js`: dual Roam journeys.
+- `performance-09.js`: 0.9 capture, motion lanes, clock and voice modulation.
+- `panel-adapter-09.js`: maps 0.9 features onto the physical-panel gestures.
+- `*-worklet.js`: the AudioWorklet processor (synthesis and voices) for each page.
 
-With the same local server running, open http://localhost:8000/performance.html. The original index.html remains the 0.1 comparison. The new page adds live routing, a destination range estimate, two LFOs, ADSR, resonant filtering, stereo spread, MIDI note/velocity input, patch snapshots and six starting sounds. Browser MIDI access requires a supported browser and permission; sustain pedal and MIDI CC are not implemented. The range display is a theoretical bound, not a measurement of live modulation. Continuous parameters are smoothed but discrete engine switches and route changes can still click. A/B comparison is a temporary snapshot, not persistent preset storage.
-
-Run `node prototype/smoke-test.cjs` from the repository root for a headless DSP smoke test. This does not substitute for browser testing, sound design or hardware validation. No Cobalt firmware is generated by these prototypes.
-
-## Roam lab 0.3
-
-Open http://localhost:8000/roam.html with the same local server. Enable audio, try Soft chord, hold R while clicking several parameter labels, and release R. Or click Capture path, select parameters, then Start journey. Click Example path for a six-destination 180-second loop. The journey is additive and leaves the base settings intact. Change depth and duration during playback; Freeze holds position, Stop returns smoothly to base. Use a MIDI keyboard or computer keys to audition sustained notes. Only supported continuous destinations are captured. Init and preset selection stop Roam. Capture/compare does not store the transport. The OLED-like status and route hints show the current and next destinations and approximate offsets. No device firmware is generated.
-
-Headless checks passed for eight-voice finite output, 180-second ordered traversal, freeze, wrap and return to base. Browser interaction and hardware still require testing.
-
-## Living Circuits lab 0.4
-
-Open http://localhost:8000/living.html using the same local server. Read [Living Circuits design](../docs/LIVING_CIRCUITS.md). Try Tidal field, Quiet machinery and Porcelain logic. Sweep Balance with Interaction engaged; at either end the oscillator interaction is absent. Use the three LFO nodes and six directed links, then assign their outputs via the inspector. Capture a Roam path or use Terrain to capture up to four compatible sound states. Connect MIDI for notes, velocity, sustain, wheel and channel pressure. Save patch/Load patch uses one browser-local slot and does not store Terrain anchors or Roam state. 
-
-Run `node prototype/living-test.cjs` from repository root. Headless checks passed at 44.1 and 48 kHz. Browser event behavior, realtime performance, listening quality and hardware support remain unverified. This is not flashable firmware.
+The archived labs are single files with everything inline.

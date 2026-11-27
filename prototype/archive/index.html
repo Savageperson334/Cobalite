@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cobalite / Instrument Lab</title>
+<style>
+*{box-sizing:border-box}body{background:#111719;color:#d5e5df;font:15px system-ui;margin:0;padding:24px}main{max-width:1080px;margin:auto}h1{font-weight:500;letter-spacing:.18em;margin:0}h2{font-size:14px;letter-spacing:.12em;color:#91c8b6}p,small{color:#9eafa9}button,select,input{accent-color:#82d4b7}button,select{background:#263631;color:#e1f1eb;border:1px solid #45675a;padding:8px;border-radius:5px}button:hover{background:#36574a}button.active{background:#9bd9c3;color:#14231c}.panel{background:#1c2525;border:1px solid #344741;border-radius:9px;padding:16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:15px 0}.param{display:grid;grid-template-columns:1fr auto;gap:4px;margin:12px 0}.param input{grid-column:1/-1;width:100%}.param button{font:inherit;text-align:left;padding:3px 7px}.param output{font-variant-numeric:tabular-nums}.route{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.keys{display:flex;gap:4px;flex-wrap:wrap;touch-action:none}.keys button{min-width:43px;min-height:75px}.keys button.black{background:#111919}.keys button.down{background:#a4e5c9;color:#17251e}#status{min-height:24px}#routes{min-height:40px}canvas{width:100%;height:85px;background:#101817;border-radius:5px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+</style>
+<main>
+<h1>COBALITE</h1><p>Instrument lab 0.1 · independent sound sketch · not device firmware</p>
+<div class="toolbar"><button id="start">Enable audio</button><button id="reset">Init</button><button id="undo">Undo</button><button id="panic">All notes off</button><span id="status" role="status">Audio starts only on request. Start with low speaker volume.</span></div>
+<div class="grid">
+<section class="panel"><h2>SOURCE A</h2><select id="engineA" aria-label="Source A engine"><option value="classic">Classic</option><option value="phase">Phase / FM</option><option value="ensemble">Ensemble</option></select><div id="a"></div></section>
+<section class="panel"><h2>SOURCE B</h2><select id="engineB" aria-label="Source B engine"><option value="classic">Classic</option><option value="phase">Phase / FM</option><option value="ensemble">Ensemble</option></select><div id="b"></div></section>
+<section class="panel"><h2>RELATIONSHIP</h2><div id="mix"></div><h2>DIGITAL CHARACTER</h2><div id="damage"></div></section>
+<section class="panel"><h2>TONE & ENVELOPE</h2><div id="tone"></div></section>
+<section class="panel"><h2>MOTION</h2><div id="motion"></div><p>Click a parameter's name to inspect or assign modulation. Turning its slider always edits the base value.</p></section>
+<section class="panel"><h2>DESTINATION INSPECTOR</h2><strong id="destination">Cutoff</strong><div id="routes"></div><div class="route"><select id="source" aria-label="Modulation source"><option value="lfo">LFO</option><option value="velocity">Velocity</option></select><input id="depth" aria-label="Signed modulation depth" type="range" min="-1" max="1" step=".01" value=".25"><output id="depthValue">+25%</output><button id="apply">Set route</button><button id="remove">Remove</button></div><small>One route per source and destination. No slot selection. Zero depth disables it.</small></section>
+</div>
+<canvas id="scope" width="800" height="85" aria-label="Output waveform"></canvas>
+<p>Play the on-screen keys or use A W S E D F T G Y H U J K. Supports polyphony; computer keyboard ghosting may limit chords.</p><div class="keys" id="keys"></div>
+</main>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const initial={engineA:"classic",engineB:"ensemble",shapeA:.18,charA:.12,shapeB:.3,charB:.12,balance:.25,interaction:0,crush:0,hold:0,cutoff:.72,attack:.06,release:.24,rate:.3,motion:1,routes:[]};
+let patch=structuredClone(initial),history=[],destination="cutoff",context,node,analyser;
+const groups={a:[["shapeA","Shape"],["charA","Character"]],b:[["shapeB","Shape"],["charB","Character"]],mix:[["balance","Balance"],["interaction","Phase interaction"]],damage:[["crush","Bit reduction"],["hold","Sample reduction"]],tone:[["cutoff","Cutoff"],["attack","Attack"],["release","Release"]],motion:[["rate","LFO rate"],["motion","Motion amount"]]};
+const modulatable=new Set(["shapeA","charA","shapeB","charB","balance","interaction","crush","hold","cutoff"]);
+const names=Object.fromEntries(Object.values(groups).flat());
+function checkpoint(){history.push(structuredClone(patch));if(history.length>40)history.shift();}
+function send(){if(node)node.port.postMessage({type:"patch",patch});}
+function sync(){for(const id of Object.keys(names)){$(id).value=patch[id];$(id+"Out").textContent=Math.round(patch[id]*100)+"%";}for(const id of ["engineA","engineB"])$(id).value=patch[id];inspect(destination);send();}
+for(const [group,entries] of Object.entries(groups)){for(const [id,name] of entries){const row=document.createElement("div");row.className="param";const btn=document.createElement("button");btn.textContent=name;btn.disabled=!modulatable.has(id);btn.onclick=()=>inspect(id);const out=document.createElement("output");out.id=id+"Out";const slider=document.createElement("input");slider.type="range";slider.min=0;slider.max=1;slider.step=.005;slider.id=id;slider.setAttribute("aria-label",name);let editing=false;const begin=()=>{if(!editing){checkpoint();editing=true;}};slider.onpointerdown=begin;slider.onkeydown=begin;slider.onchange=()=>{editing=false;};slider.onblur=()=>{editing=false;};slider.oninput=()=>{begin();patch[id]=Number(slider.value);out.textContent=Math.round(patch[id]*100)+"%";send();};row.append(btn,out,slider);$(group).append(row);}}
+for(const id of ["engineA","engineB"])$(id).onchange=()=>{checkpoint();patch[id]=$(id).value;send();};
+function inspect(id){destination=id;$("destination").textContent=names[id];$("routes").replaceChildren();for(const r of patch.routes.filter(r=>r.dest===id)){const b=document.createElement("button");b.textContent=r.src+" "+fmt(r.depth);b.onclick=()=>{$("source").value=r.src;loadDepth();};$("routes").append(b);}loadDepth();}
+function fmt(n){return (n>=0?"+":"")+Math.round(n*100)+"%";}
+function loadDepth(){const r=patch.routes.find(r=>r.dest===destination&&r.src===$("source").value);$("depth").value=r?r.depth:.25;$("depthValue").textContent=fmt(Number($("depth").value));}
+$("source").onchange=loadDepth;$("depth").oninput=()=>{$("depthValue").textContent=fmt(Number($("depth").value));};
+function setRoute(depth){checkpoint();const src=$("source").value;patch.routes=patch.routes.filter(r=>r.dest!==destination||r.src!==src);if(depth!==0)patch.routes.push({src,dest:destination,depth});sync();}
+$("apply").onclick=()=>setRoute(Number($("depth").value));$("remove").onclick=()=>setRoute(0);
+$("reset").onclick=()=>{checkpoint();patch=structuredClone(initial);sync();};$("undo").onclick=()=>{if(history.length){patch=history.pop();sync();}};
+const processorCode=`
+class Cobalite extends AudioWorkletProcessor {
+ constructor(){super();this.p=null;this.voices=[];this.lfo=0;this.age=0;this.port.onmessage=({data:d})=>{if(d.type==="patch")this.p=d.patch;if(d.type==="on"){this.voices=this.voices.filter(v=>v.id!==d.id);if(this.voices.length>=8){let i=this.voices.findIndex(v=>v.off);this.voices.splice(i<0?0:i,1);}this.voices.push({id:d.id,f:440*Math.pow(2,(d.note-69)/12),vel:d.vel||.8,a:0,b:0,c:0,env:0,lp:0,sample:0,count:0,off:false});}if(d.type==="off"){for(const v of this.voices)if(v.id===d.id)v.off=true;}if(d.type==="panic")this.voices=[];};}
+ osc(kind,p,shape,ch,detuned){const t=2*Math.PI*p,s=Math.sin(t);if(kind==="phase"){const ratios=[1,2,3,4,5,6,8];let x=shape*(ratios.length-1),i=Math.floor(x),u=x-i;return (1-u)*Math.sin(t+ch*4*Math.sin(t*ratios[i]))+u*Math.sin(t+ch*4*Math.sin(t*ratios[Math.min(i+1,6)]));}const tri=1-4*Math.abs(p-.5),saw=2*p-1,pulse=p<.5?1:-1;let waves=[s,tri,saw,pulse],x=shape*3,i=Math.floor(x),u=x-i;let base=waves[i]*(1-u)+waves[Math.min(i+1,3)]*u;if(kind==="ensemble")return base*(1-ch*.6)+Math.sin(2*Math.PI*detuned)*ch*.6;return Math.tanh(base*(1+ch*2))/Math.tanh(1+ch*2);}
+ process(inputs,outputs){const out=outputs[0],p=this.p;if(!p)return true;for(let i=0;i<out[0].length;i++){this.lfo=(this.lfo+(.06*Math.pow(200,p.rate))/sampleRate)%1;const lfo=Math.sin(2*Math.PI*this.lfo);let l=0,r=0;for(const v of this.voices){const val=k=>{let x=p[k];for(const m of p.routes)if(m.dest===k)x+=m.depth*p.motion*(m.src==="lfo"?lfo:v.vel);return Math.max(0,Math.min(1,x));};const aT=.005+Math.pow(p.attack,2)*2,rT=.02+Math.pow(p.release,2)*4;v.env+=(v.off?0-v.env:1-v.env)*(1-Math.exp(-1/(sampleRate*(v.off?rT:aT))));v.a=(v.a+v.f/sampleRate)%1;v.b=(v.b+v.f/sampleRate)%1;v.c=(v.c+v.f*(1+.012*val("charB"))/sampleRate)%1;let b=this.osc(p.engineB,v.b,val("shapeB"),val("charB"),v.c);let a=this.osc(p.engineA,((v.a+b*val("interaction")*.18)%1+1)%1,val("shapeA"),val("charA"),v.c);let mix=val("balance"),s=a*(1-mix)+b*mix;const cr=val("crush"),hold=val("hold");if(cr>0){let levels=Math.pow(2,16-cr*14);s=s*(1-cr)+Math.round(s*levels)/levels*cr;}if(v.count<=0||hold===0){v.sample=s;v.count=1+Math.floor(hold*hold*95);}else v.count--;s=v.sample;let hz=Math.min(sampleRate*.4,45*Math.pow(350,val("cutoff")));v.lp+=(s-v.lp)*(1-Math.exp(-2*Math.PI*hz/sampleRate));s=v.lp*v.env*v.vel*.115;l+=s;r+=s;}this.voices=this.voices.filter(v=>!v.off||v.env>.0001);out[0][i]=Math.tanh(l);if(out[1])out[1][i]=Math.tanh(r);}return true;}
+}
+registerProcessor("cobalite",Cobalite);`;
+$("start").onclick=async()=>{try{if(context){await context.resume();return;}context=new AudioContext();const blob=URL.createObjectURL(new Blob([processorCode],{type:"text/javascript"}));try{await context.audioWorklet.addModule(blob);}finally{URL.revokeObjectURL(blob);}node=new AudioWorkletNode(context,"cobalite",{outputChannelCount:[2]});analyser=context.createAnalyser();const gain=context.createGain();gain.gain.value=.55;node.connect(gain).connect(analyser).connect(context.destination);await context.resume();send();$("status").textContent="Audio ready · eight-voice sketch";$("start").disabled=true;draw();}catch(e){$("status").textContent="Audio unavailable: "+e.message;if(context)await context.close();context=null;node=null;}};
+function note(type,id,note){if(node)node.port.postMessage({type,id,note,vel:.8});}
+const keys="awsedftgyhujk",active=new Map();
+function on(id,n){if(active.has(id)||!node)return;active.set(id,n);note("on",id,n);refreshKeys();}
+function off(id){if(!active.has(id))return;note("off",id);active.delete(id);refreshKeys();}
+function refreshKeys(){for(const b of $("keys").children)b.classList.toggle("down",[...active.values()].includes(Number(b.dataset.note)));}
+function panic(){active.clear();if(node)node.port.postMessage({type:"panic"});refreshKeys();}
+$("panic").onclick=panic;window.addEventListener("blur",panic);document.addEventListener("visibilitychange",()=>{if(document.hidden)panic();});
+for(let i=0;i<keys.length;i++){const b=document.createElement("button");b.textContent=keys[i].toUpperCase();b.dataset.note=60+i;if([1,3,6,8,10].includes(i))b.classList.add("black");b.onpointerdown=e=>{b.setPointerCapture(e.pointerId);on("p"+e.pointerId,60+i);};b.onpointerup=b.onpointercancel=b.onlostpointercapture=e=>off("p"+e.pointerId);$("keys").append(b);}
+window.addEventListener("keydown",e=>{if(e.repeat||/INPUT|SELECT|TEXTAREA|BUTTON/.test(e.target.tagName)||e.ctrlKey||e.metaKey||e.altKey)return;const i=keys.indexOf(e.key.toLowerCase());if(i>=0){e.preventDefault();on("k"+i,60+i);}});window.addEventListener("keyup",e=>{let i=keys.indexOf(e.key.toLowerCase());if(i>=0)off("k"+i);});
+function draw(){if(!analyser)return;const c=$("scope"),g=c.getContext("2d"),data=new Float32Array(analyser.fftSize);analyser.getFloatTimeDomainData(data);g.clearRect(0,0,c.width,c.height);g.strokeStyle="#82d4b7";g.beginPath();for(let i=0;i<data.length;i++){const x=i/(data.length-1)*c.width,y=c.height/2-data[i]*c.height/2;i?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();requestAnimationFrame(draw);}
+sync();
+</script>
+</html>
