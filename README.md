@@ -49,7 +49,7 @@ Cobalite is unofficial and not affiliated with Modal or Korg. Do not commit vend
 
 Design and engineering decisions remain provisional until validated by listening, panel interaction tests and hardware evidence.
 
-## Current experiment: Living Circuits 0.4
+## Earlier experiment: Living Circuits 0.4
 
 [Design and quality gates](docs/LIVING_CIRCUITS.md) · [Audition instructions](prototype/README.md) · [Browser prototype](prototype/living.html). Three interconnected LFOs, travelling modulation, four-corner sound terrain and a continuous oscillator relationship field. Prior labs remain in the repo for comparison. No flashable firmware is available.
 
@@ -64,3 +64,7 @@ Design and engineering decisions remain provisional until validated by listening
 ## Voice Society / Chord Memory
 
 [Design and allocator contract](docs/VOICE_SOCIETY.md) · [Audition lab](prototype/society.html). Serve `prototype/` locally and open `/society.html`. Eight persistent voice identities, mono/unison/stack/complement modes, captured chord voicings, inversion and arpeggiation. Run `node prototype/society-test.cjs`. Independent audition renderer; not integrated firmware.
+
+## Current instrument: 0.7 unified build
+
+[Audition the unified instrument](prototype/instrument.html) · [Consolidation review](docs/INSTRUMENT_07.md). Serve `prototype/` as before and open `/instrument.html`. One voice pool, patch, modulation registry, synthesis engine, phrase/chord transport and Afterimage rack. Try Living sound for a cross-modulating and audio-responsive starting patch. Run `node prototype/instrument-test.cjs`. Prior labs are retained for comparison. Headless checks passed at 44.1 and 48 kHz; browser audition, physical panel and firmware remain unverified.
