@@ -18,7 +18,7 @@ class PhraseLab extends AudioWorkletProcessor{
   if(d.type==="cancel"){this.cap.reset();this.emit();}
   if(d.type==="play"){if(!this.cap.armed){if(this.playing)this.stop();else this.play();}this.emit();}
   if(d.type==="stop"){this.stop();this.cap.reset();this.emit();}
-  if(d.type==="load"){try{this.stop();this.cap.reset();this.setPhrase(d.phrase);this.settings={...defaults};this.emit();}catch(e){this.port.postMessage({type:"error",message:e.message});}}
+  if(d.type==="load"){try{this.stop();this.cap.reset();this.setPhrase(d.phrase);this.settings={...defaults};if(d.autoplay)this.play();this.emit();}catch(e){this.port.postMessage({type:"error",message:e.message});}}
   if(d.type==="undoCapture"&&this.previous){this.stop();const a=this.phrase;this.phrase=this.previous;this.previous=a;this.cap.reset();this.emit();}
   if(d.type==="on"){const id="live:"+d.id;this.cap.on(id,d.pitch,d.velocity,this.beat);this.on(id,d.pitch,d.velocity,false);}
   if(d.type==="off"){const id="live:"+d.id;this.cap.off(id,this.beat);this.off(id);}
@@ -31,7 +31,7 @@ class PhraseLab extends AudioWorkletProcessor{
   for(let i=0;i<n;i++){
    if(this.cap.armed&&this.cap.origin!==null&&this.beat-this.cap.origin>=128){const phrase=this.cap.finish(this.beat);if(phrase&&phrase.notes.length){this.setPhrase(phrase);this.settings={...defaults};this.play();}this.emit();}
    if(this.playing&&this.phrase){
-    if(this.beat+1e-9>=this.origin+this.nextCycle*this.phrase.length){this.queue.push(...cycleEvents(this.phrase,this.settings,this.nextCycle,this.origin,1337));this.queue.sort((a,b)=>a.beat-b.beat||(a.type==="off"?-1:1));this.nextCycle++;}
+    if(this.beat+1e-9>=this.origin+this.nextCycle*this.phrase.length){this.queue.push(...cycleEvents(this.phrase,this.settings,this.nextCycle,this.origin,1337));this.queue.sort((a,b)=>a.beat-b.beat||(a.type===b.type?0:a.type==="off"?-1:1));this.nextCycle++;}
     while(this.queue.length&&this.queue[0].beat<=this.beat+1e-9){const e=this.queue.shift();if(e.type==="on")this.on(e.id,e.pitch,e.velocity,true);else this.off(e.id);}
    }
    let l=0,r=0;for(const v of this.voices){v.phase=(v.phase+v.inc)%1;v.age+=1/sampleRate;v.env+=((v.off?0:1)-v.env)*(v.off?rel:atk);const t=v.phase*6.283185307,s=this.source==="bright"?.68*Math.sin(t)+.22*Math.sin(t*2)+.1*Math.sin(t*3):this.source==="pluck"?(.72*Math.sin(t)+.28*Math.sin(t*3))*Math.exp(-v.age*3.5):.85*Math.sin(t)+.15*Math.sin(t*2);const x=s*v.env*v.vel*.075;l+=x*(1-v.pan);r+=x*(1+v.pan);}
