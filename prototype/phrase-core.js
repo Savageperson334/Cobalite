@@ -21,6 +21,7 @@ class Capture {
 }
 function transform(phrase,settings={},cycle=0,seed=1337){
  const p={...defaults,...settings},L=phrase.length,q=clamp(p.quantize,0,1),density=clamp(p.density,-1,1),variation=clamp(p.variation,0,1),grid=.25;
+ if(q===0&&density===0&&p.rotate===0&&p.harmony===0&&p.gate===1)return phrase.notes.map(n=>({start:n.start,duration:n.duration,pitch:n.pitch,velocity:n.velocity}));
  const notes=[];const seen=new Set();const pitches=[...new Set(phrase.notes.map(n=>n.pitch))].sort((a,b)=>a-b);
  // A stable seed yields a recognizable phrase; variation gradually allows a cycle-specific seed.
  const rng=(id,salt)=>hash(seed+id*7919+salt*131+(hash(seed+id*73+salt)<variation?cycle*19937:0));
@@ -46,7 +47,7 @@ function transform(phrase,settings={},cycle=0,seed=1337){
 function cycleEvents(phrase,settings,cycle,origin,seed){
  const notes=transform(phrase,settings,cycle,seed),base=origin+cycle*phrase.length,out=[];
  for(let i=0;i<notes.length;i++){const n=notes[i],id="seq:"+cycle+":"+i;out.push({beat:base+n.start,type:"on",id,pitch:n.pitch,velocity:n.velocity},{beat:base+n.start+n.duration,type:"off",id});}
- return out.sort((a,b)=>a.beat-b.beat||(a.type==="off"?-1:1));
+ return out.sort((a,b)=>a.beat-b.beat||(a.type===b.type?0:a.type==="off"?-1:1));
 }
 const api={Capture,validate,transform,cycleEvents,defaults};if(typeof module==="object"&&module.exports)module.exports=api;else root.CobalitePhrase=api;
 })(globalThis);
