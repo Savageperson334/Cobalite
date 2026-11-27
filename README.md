@@ -56,3 +56,7 @@ Design and engineering decisions remain provisional until validated by listening
 ## Afterimage: effects research
 
 [FX design](docs/AFTERIMAGE_FX.md) · [Stock capability audit](docs/COBALT_CAPABILITY_AUDIT.md) · [Audition lab](prototype/fx.html). Serve `prototype/` locally as before and open `/fx.html`. Five original experimental effects, three fixed serial slots and audio-derived modulation. Run `node prototype/fx-test.cjs` for headless DSP checks. Independent from Living Circuits while PR #1 is in progress; no flashable firmware or browser audition yet.
+
+## Phrase Ecology: capture-first sequencing
+
+[Phrase design](docs/PHRASE_ECOLOGY.md) · [Audition lab](prototype/phrase.html). Serve `prototype/` locally and open `/phrase.html`. Capture a performance, finish to loop, transform it without changing the original. MIDI keyboard input and a simple audition synth with optional Afterimage echo. Run `node prototype/phrase-test.cjs`. Separate from Living Circuits and device firmware.
