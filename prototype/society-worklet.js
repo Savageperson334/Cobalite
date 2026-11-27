@@ -12,7 +12,7 @@ class SocietyLab extends AudioWorkletProcessor{
  playRoot(id,pitch,velocity){
   const p=this.target;if(p.chordMode==="off"||this.chord.capturing){this.pool.on("note:"+id,pitch,velocity);this.groups.set(id,["note:"+id]);return;}
   const notes=this.chord.voicing(pitch,p.inversion,p.spread);
-  if(p.chordMode==="arp"&&this.arpHeld.size){if(!this.arpHeld.size){this.arpClock=0;this.arpStep=0;this.arpGate=0;}this.arpHeld.set(id,{notes,velocity});return;}
+  if(p.chordMode==="arp"){if(!this.arpHeld.size){this.arpClock=0;this.arpStep=0;this.arpGate=0;}this.arpHeld.set(id,{notes,velocity});return;}
   const ids=[];for(let i=0;i<notes.length;i++){const key="chord:"+id+":"+i;ids.push(key);this.pool.on(key,notes[i],velocity);}this.groups.set(id,ids);
  }
  receive(d){
@@ -27,7 +27,7 @@ class SocietyLab extends AudioWorkletProcessor{
  process(inputs,outputs){const out=outputs[0],n=out[0].length,p=this.p,t=this.target,dt=1/sampleRate,smooth=1-Math.exp(-dt/.035);p.chordMode=t.chordMode;p.arpOrder=t.arpOrder;let peak=0;
   for(let i=0;i<n;i++){
    for(const k of smoothKeys)p[k]+=(t[k]-p[k])*smooth;
-   if(p.chordMode==="arp"){
+   if(p.chordMode==="arp"&&this.arpHeld.size){
     if(this.arpGate>0&&(this.arpGate-=dt)<=0){for(const id of this.arpIds)this.pool.off(id);this.arpIds.length=0;}
     this.arpClock-=dt;if(this.arpClock<=0){const dur=60/clamp(t.bpm,35,240)*clamp(t.division,.125,2);this.arpClock+=dur;for(const id of this.arpIds)this.pool.off(id);this.arpIds.length=0;const held=[...this.arpHeld.values()].at(-1);if(held&&held.notes.length){const idx=arpIndex(this.arpStep++,held.notes.length,t.arpOrder),id="arp:"+this.arpStep;this.pool.on(id,held.notes[idx],held.velocity,"arp");this.arpIds.push(id);this.arpGate=dur*clamp(t.gate,.05,.98);} }
    }
