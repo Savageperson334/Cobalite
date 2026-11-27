@@ -43,3 +43,9 @@ Run `node prototype/smoke-test.cjs` from the repository root for a headless DSP 
 Open http://localhost:8000/roam.html with the same local server. Enable audio, try Soft chord, hold R while clicking several parameter labels, and release R. Or click Capture path, select parameters, then Start journey. Click Example path for a six-destination 180-second loop. The journey is additive and leaves the base settings intact. Change depth and duration during playback; Freeze holds position, Stop returns smoothly to base. Use a MIDI keyboard or computer keys to audition sustained notes. Only supported continuous destinations are captured. Init and preset selection stop Roam. Capture/compare does not store the transport. The OLED-like status and route hints show the current and next destinations and approximate offsets. No device firmware is generated.
 
 Headless checks passed for eight-voice finite output, 180-second ordered traversal, freeze, wrap and return to base. Browser interaction and hardware still require testing.
+
+## Living Circuits lab 0.4
+
+Open http://localhost:8000/living.html using the same local server. Read [Living Circuits design](../docs/LIVING_CIRCUITS.md). Try Tidal field, Quiet machinery and Porcelain logic. Sweep Balance with Interaction engaged; at either end the oscillator interaction is absent. Use the three LFO nodes and six directed links, then assign their outputs via the inspector. Capture a Roam path or use Terrain to capture up to four compatible sound states. Connect MIDI for notes, velocity, sustain, wheel and channel pressure. Save patch/Load patch uses one browser-local slot and does not store Terrain anchors or Roam state. 
+
+Run `node prototype/living-test.cjs` from repository root. Headless checks passed at 44.1 and 48 kHz. Browser event behavior, realtime performance, listening quality and hardware support remain unverified. This is not flashable firmware.
