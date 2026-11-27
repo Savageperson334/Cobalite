@@ -48,3 +48,7 @@ Use the existing OLED and LEDs to indicate selected controls, actual parameter n
 Cobalite is unofficial and not affiliated with Modal or Korg. Do not commit vendor firmware, extracted proprietary binaries, presets or third-party code without verified redistribution rights. Keep original firmware inputs local; distribute original code and version-specific patch tooling where permitted. Verify upstream licenses before incorporating code. No project license is assumed until the owner selects one.
 
 Design and engineering decisions remain provisional until validated by listening, panel interaction tests and hardware evidence.
+
+## Current experiment: Living Circuits 0.4
+
+[Design and quality gates](docs/LIVING_CIRCUITS.md) · [Audition instructions](prototype/README.md) · [Browser prototype](prototype/living.html). Three interconnected LFOs, travelling modulation, four-corner sound terrain and a continuous oscillator relationship field. Prior labs remain in the repo for comparison. No flashable firmware is available.
