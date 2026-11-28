@@ -3,7 +3,13 @@
 *.bin
 *.hex
 *.elf
-firmware/
+firmware/*
+!firmware/panel/
+firmware/panel/*
+!firmware/panel/*.c
+!firmware/panel/*.h
+*.o
+*.exe
 stock/
 # Local tooling
 node_modules/
