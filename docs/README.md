@@ -4,6 +4,8 @@ Working documents, not specifications. Newer build notes supersede older ones wh
 
 ## Start here
 
+- [FRONT_PANEL_H1.md](FRONT_PANEL_H1.md): latest physical panel mock, event model and native input layer.
+
 - [INSTRUMENT.md](INSTRUMENT.md): what Cobalite should be and why; the core instrument design.
 - [PERFORMANCE_09.md](PERFORMANCE_09.md): the current build (0.9). Phrase overdub, motion lanes, Euclidean arp, modulation and clock.
 - [HARDWARE_H0.md](HARDWARE_H0.md): the current hardware milestone. Inventory stock firmware read-only; do not flash.
