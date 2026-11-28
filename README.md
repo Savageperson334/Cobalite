@@ -11,7 +11,7 @@ An independent alternate-firmware project for the Modal Cobalt8M.
     npm run serve    # or: python3 -m http.server 8000 --directory prototype
     npm test         # every headless test suite (Node 18+)
 
-Open http://localhost:8000, turn the volume down and pick a build. The current one is **[Performance & Motion 0.9](prototype/performance-09.html)** ([notes](docs/PERFORMANCE_09.md)). Everything runs in the browser. MIDI keyboards and clock can play it, but nothing here sends data or firmware to a Cobalt.
+Open http://localhost:8000, turn the volume down and pick a build. The latest panel study is **[Front Panel H1](prototype/front-panel.html)** ([notes](docs/FRONT_PANEL_H1.md)), using Performance & Motion 0.9 audio. Everything runs in the browser. MIDI keyboards and clock can play it, but nothing here sends data or firmware to a Cobalt.
 
 ## Design principles
 
@@ -58,8 +58,9 @@ Design and engineering decisions remain provisional until validated by listening
 
 ## Project map
 
-- **[prototype/](prototype/README.md)**: the browser builds. 0.9 is current; 0.8 and 0.7 are earlier builds; Afterimage FX, Phrase Ecology and Voice Society are component labs; 0.1–0.4 are in [prototype/archive/](prototype/archive/README.md).
+- **[prototype/](prototype/README.md)**: the browser builds. H1 is the current panel mock using 0.9 DSP; 0.8 and 0.7 are earlier builds; Afterimage FX, Phrase Ecology and Voice Society are component labs; 0.1–0.4 are in [prototype/archive/](prototype/archive/README.md).
 - **[docs/](docs/README.md)**: design notes, per-build notes and hardware research, with an index.
+- **[firmware/panel/](firmware/panel/)**: portable C99 input event queue and host test, not a target build.
 - **[tools/](tools/)**: `firmware-audit.cjs`, a read-only checker for your own stock Cobalt update files (`npm run audit -- panel.syx master.syx slave.syx`). It never sends MIDI or writes firmware. See [Hardware milestone H0](docs/HARDWARE_H0.md). `run-tests.cjs` runs every test suite.
 
 All tests are headless checks of DSP and event logic. Browser audio, listening quality, the physical panel and the hardware remain unverified.
