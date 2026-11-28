@@ -16,7 +16,8 @@ Run every headless test with `npm test` (Node 18 or later). These check the DSP 
 
 | Page | Status | Notes | Test |
 |---|---|---|---|
-| [performance-09.html](performance-09.html) | **Current build** | [PERFORMANCE_09](../docs/PERFORMANCE_09.md) | `performance-test-09.cjs` |
+| [front-panel.html](front-panel.html) | **Current panel study** | [FRONT_PANEL_H1](../docs/FRONT_PANEL_H1.md) | `front-panel-test.cjs` |
+| [performance-09.html](performance-09.html) | Current DSP reference | [PERFORMANCE_09](../docs/PERFORMANCE_09.md) | `performance-test-09.cjs` |
 | [panel.html](panel.html) | Earlier build 0.8 | [PANEL_08](../docs/PANEL_08.md) | `panel-test.cjs` |
 | [instrument.html](instrument.html) | Earlier build 0.7 | [INSTRUMENT_07](../docs/INSTRUMENT_07.md) | `instrument-test.cjs` |
 | [fx.html](fx.html) | Component lab | [AFTERIMAGE_FX](../docs/AFTERIMAGE_FX.md) | `fx-test.cjs` |
